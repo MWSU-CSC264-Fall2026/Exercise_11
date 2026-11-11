@@ -1,8 +1,8 @@
+
 .data
 # The string to be processed.
 test_string: .string "hello, world!"
 
-# Force the next variable to align to a 4-byte boundary.
 .align 2
 
 # A dedicated memory location to store the length.
@@ -15,15 +15,12 @@ main:
     # 1. Test strlen
     la a0, test_string
     jal ra, strlen
-    
-    # Store the length in memory so the autograder can check it
+
+    # Store the length in memory
     la t0, length_result
     sw a0, 0(t0)
 
     # 2. Test to_upper
-    # Note: While .string literals can be read-only in real systems, 
-    # the .data section in this simulator is writable, so modifying 
-    # test_string in place is perfectly safe here.
     la a0, test_string
     jal ra, to_upper
 
@@ -35,40 +32,47 @@ main:
 # -------------------------------------------------
 # Function: strlen
 # Purpose: return the length of a string
-# Arguments:
-#   a0 = address of the string
-# Returns:
-#   a0 = length
-# 
-# TODO: Fix the bug in this function!
 # -------------------------------------------------
 strlen:
-    li   t0, 0             # length counter
-    mv   t1, a0            # pointer to current character
+    li t0, 0
+    mv t1, a0
 
 strlen_loop:
-    lbu  t2, 0(t1)
-    
-    addi t0, t0, 1         # increment length
-    addi t1, t1, 1         # advance pointer
-    j    strlen_loop
+    lbu t2, 0(t1)
+    beqz t2, strlen_done
+
+    addi t0, t0, 1
+    addi t1, t1, 1
+    j strlen_loop
+
+strlen_done:
+    mv a0, t0
+    ret
 
 
 # -------------------------------------------------
 # Function: to_upper
-# Purpose: convert all lowercase letters in a string 
-#          to uppercase in place. 
-# Hint: "in place" means you aren't copying the string to another location,
-#       you are modifying each byte where it already is. By the end, 
-#       the string located at test_string should be "HELLO, WORLD!"
-# Arguments:
-#   a0 = address of the string
-# Returns:
-#   a0 = address of the modified string
-#
-# TODO: Implement this function from scratch!
+# Purpose: convert lowercase letters to uppercase
 # -------------------------------------------------
 to_upper:
-    # Your code here
-    
+    mv t1, a0
+
+to_upper_loop:
+    lbu t0, 0(t1)
+    beqz t0, to_upper_done
+
+    li t2, 97
+    blt t0, t2, to_upper_next
+
+    li t2, 122
+    bgt t0, t2, to_upper_next
+
+    addi t0, t0, -32
+    sb t0, 0(t1)
+
+to_upper_next:
+    addi t1, t1, 1
+    j to_upper_loop
+
+to_upper_done:
     ret
